@@ -7,15 +7,30 @@ import glob
 import sys, os 
 import datetime
 
-prefix = "Log_Prefix"
-bucket = "my-bucket"
+# Use 2 Env Vars for the logfile prefix and bucket.
+prefix = os.environ['LOG_PREFIX']
+bucket = os.environ['MY_BUCKET']
 
 
 
 # Create a client
-client = boto3.client('s3', region_name='us-east-1')
+client = None
+if 'AWS_ACCESS_KEY_ID' in os.environ:
+    #pull from env var
+    client = boto3.client('s3', region_name='us-east-1', aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+            aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
+else:
+    #pull from ~/.aws/credentials file
+    client = boto3.client('s3', region_name='us-east-1')
 
-s3 = boto3.resource('s3')
+s3 = None
+if 'AWS_ACCESS_KEY_ID' in os.environ:
+    s3 = boto3.resource('s3', 
+            aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+            aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
+else:
+    #pull from ~/.aws/credentials file
+    s3 = boto3.resource('s3')
 
 # Create a reusable Paginator
 paginator = client.get_paginator('list_objects')
@@ -55,7 +70,9 @@ completedlogs = glob.glob("processed/*.log")
 onlyfiles = [f for f in listdir("src/") if isfile(join("src/", f))]
 onlyfiles.sort()
 for obj in onlyfiles:
-    if not obj.endswith(".log") or obj == ".gitkeep":
+    if obj.endswith(".log") or obj.endswith(".gitkeep"):
+        skip = True
+    else:
         # Log_File_2020-07-12-18-28-08-1F583BAA22302BFF
         strdate = obj.lstrip(prefix)
         #print("date:" + strdate)
