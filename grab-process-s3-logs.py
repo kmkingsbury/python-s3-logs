@@ -11,6 +11,7 @@ prefix = "Log_Prefix"
 bucket = "my-bucket"
 
 
+
 # Create a client
 client = boto3.client('s3', region_name='us-east-1')
 
@@ -48,13 +49,13 @@ now = datetime.datetime.now()
 today =  "%04d-%02d-%02d" % (now.year, now.month, now.day)
 print("Today:" + today)
 #sys.exit()
-completedlogs = glob.glob("src/*.log")
+completedlogs = glob.glob("processed/*.log")
 #print("CL:" + str(completedlogs))
 
 onlyfiles = [f for f in listdir("src/") if isfile(join("src/", f))]
 onlyfiles.sort()
 for obj in onlyfiles:
-    if not obj.endswith(".log"):
+    if not obj.endswith(".log") or obj == ".gitkeep":
         # Log_File_2020-07-12-18-28-08-1F583BAA22302BFF
         strdate = obj.lstrip(prefix)
         #print("date:" + strdate)
@@ -62,6 +63,6 @@ for obj in onlyfiles:
         #print("filename:" + strdate)
 
         # Skip Today and If strdate.log exists in completed logs, then we already processed these files.
-        if strdate != today and not "src/" + strdate + ".log" in completedlogs:
-            os.system("cat src/"+obj + " >> src/" + strdate + ".log" )
+        if strdate != today and not "processed/" + strdate + ".log" in completedlogs:
+            os.system("cat src/"+obj + " >> processed/" + strdate + ".log" )
             print("filename:" + strdate)
